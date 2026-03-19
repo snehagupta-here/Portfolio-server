@@ -12,14 +12,23 @@ export interface UserSkill {
 
 export interface UserCreate {
   about?: string;
-  resume?: string;
+  name: string;
   links?: SocialLink[];
   skills?: UserSkill[];
 }
 
 export interface UserUpdate {
   about?: string;
-  resume?: string;
+  name: string;
   links?: SocialLink[];
   skills?: UserSkill[];
+}
+
+export interface ResolvedUserInput {
+  about?: string;
+  name: string;
+  links?: SocialLink[];
+  skills?: UserSkill[];
+  profile_image?: Express.Multer.File[];
+  resume?: Express.Multer.File[];
 }

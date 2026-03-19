@@ -4,7 +4,7 @@ import {
   Body,
   Get,
   Param,
-  Put,
+  Patch,
   Delete,
 } from '@nestjs/common';
 import { TestimonialService } from './testimonial.service';
@@ -31,7 +31,7 @@ export class TestimonialController {
     return await this.testimonialService.getTestimonialById(id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   async updateTestimonial(
     @Param('id') id: string,
     @Body() body: Partial<TestimonialDto>,

@@ -13,8 +13,8 @@ import { SkillService } from './skill.service';
 import { SkillDto } from 'src/dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
-import { SkillInputResolverService } from '../../pipes/resolve-skill-icon.pipe';
-import type { ResolvedSkillInput } from '../../common/image/image.types';
+import { SkillInputResolverService } from '../../pipes/resolve-skill.pipe';
+import type { ResolvedSkillInput } from 'src/interfaces';
 
 @Controller('skills')
 export class SkillController {

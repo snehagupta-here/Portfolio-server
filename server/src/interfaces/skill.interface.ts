@@ -32,3 +32,13 @@ export interface SkillResponse {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export interface ResolvedSkillInput {
+  name: string;
+  category: SkillCategoryEnum;
+  icon: {
+    sourceType: 'file' | 'url';
+    file?: Express.Multer.File;
+    url?: string;
+  };
+}

@@ -8,7 +8,7 @@ import { Model, Types } from 'mongoose';
 import { Skill } from 'src/schema/skill.schema';
 import { handleError } from 'src/utils/error-handler';
 import { ImageResolverService } from '../../common/image/image-resolver.service';
-import type { ResolvedSkillInput } from '../../common/image/image.types';
+import type { ResolvedSkillInput } from 'src/interfaces';
 import { slugify } from 'src/utils/slugify';
 
 @Injectable()

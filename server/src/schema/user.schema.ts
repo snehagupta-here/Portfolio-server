@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Document, Types } from 'mongoose';
+import { ImageAsset, ImageAssetSchema } from './image-asset.schema';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -24,6 +25,9 @@ class UserSkill {
 
   @Prop({ type: Number, required: true, min: 0 })
   yoe!: number;
+
+  @Prop({ type: Number, required: true, min: 0 })
+  scale!: number;
 }
 
 const UserSkillSchema = SchemaFactory.createForClass(UserSkill);
@@ -34,7 +38,13 @@ export class User extends Document {
   about!: string;
 
   @Prop({ type: String })
-  resume!: string;
+  name!: string;
+
+  @Prop({ type: ImageAssetSchema })
+  profile_image?: ImageAsset;
+
+  @Prop({ type: ImageAssetSchema })
+  resume?: ImageAsset;
 
   @Prop({ type: [SocialLinkSchema], default: [] })
   links!: SocialLink[];

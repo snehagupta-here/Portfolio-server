@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ImageValidationService } from '../common/image/image-validation.service';
 import type {
   ResolvedExperienceInput,
-} from '../common/image/image.types';
+} from 'src/interfaces';
 import { ExperienceDto } from 'src/dto';
 
 @Injectable()
@@ -21,10 +21,10 @@ export class ExperienceInputResolverService {
     });
 
     if (file) {
-      this.imageValidationService.validateFile(file, {
+      this.imageValidationService.validateImage(file, {
         allowSvg: true,
         maxSizeBytes: 2 * 1024 * 1024,
-      });
+      },'company_icon');
 
    return {
         user_id: body.user_id,
@@ -91,10 +91,10 @@ export class ExperienceInputResolverService {
     }
 
     if (file) {
-      this.imageValidationService.validateFile(file, {
+      this.imageValidationService.validateImage(file, {
         allowSvg: true,
         maxSizeBytes: 2 * 1024 * 1024,
-      });
+      },'company_icon');
 
      return {
         user_id: body.user_id,

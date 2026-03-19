@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ImageValidationService } from '../common/image/image-validation.service';
 import type {
   ResolvedSkillInput,
-} from '../common/image/image.types';
+} from 'src/interfaces';
 import { SkillDto } from 'src/dto';
 
 @Injectable()
@@ -21,10 +21,10 @@ export class SkillInputResolverService {
     });
 
     if (file) {
-      this.imageValidationService.validateFile(file, {
+      this.imageValidationService.validateImage(file, {
         allowSvg: true,
         maxSizeBytes: 2 * 1024 * 1024,
-      });
+      },'skill_icon');
 
       return {
         name: body.name,
@@ -67,10 +67,10 @@ export class SkillInputResolverService {
     }
 
     if (file) {
-      this.imageValidationService.validateFile(file, {
+      this.imageValidationService.validateImage(file, {
         allowSvg: true,
         maxSizeBytes: 2 * 1024 * 1024,
-      });
+      },'skill_icon');
 
       return {
         name: body.name,

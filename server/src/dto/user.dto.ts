@@ -43,9 +43,8 @@ export class UserDto {
   @IsString()
   about?: string;
 
-  @IsOptional()
-  @IsUrl()
-  resume?: string;
+  @IsString()
+  name!: string;
 
   @IsOptional()
   @IsArray()

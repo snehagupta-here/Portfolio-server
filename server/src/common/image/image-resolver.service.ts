@@ -29,8 +29,6 @@ export class ImageResolverService {
     this.imageValidationService.validateRequiredImageInput(input);
 
     if (input.file) {
-      this.imageValidationService.validateFile(input.file, options);
-
       const raw = await this.uploadBuffer(input.file.buffer, {
         folder: options.folder,
         public_id: options.publicId,
@@ -45,7 +43,6 @@ export class ImageResolverService {
       };
     }
 
-    this.imageValidationService.validateUrl(input.url!, options);
     await this.assertRemoteImageReachable(input.url!);
 
     const raw = await this.uploadRemoteUrl(input.url!, {
@@ -104,34 +101,34 @@ export class ImageResolverService {
     };
   }
 
- private async assertRemoteImageReachable(fileUrl: string): Promise<void> {
-  try {
-    const response = await fetch(fileUrl, {
-      method: 'GET',
-      redirect: 'follow',
-    });
+  private async assertRemoteImageReachable(fileUrl: string): Promise<void> {
+    try {
+      const response = await fetch(fileUrl, {
+        method: 'GET',
+        redirect: 'follow',
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
+        throw new BadRequestException(
+          'The provided image URL is not publicly reachable.',
+        );
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+
+      if (!contentType.startsWith('image/')) {
+        throw new BadRequestException(
+          'The provided URL does not point to a valid image.',
+        );
+      }
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
       throw new BadRequestException(
-        'The provided image URL is not publicly reachable.',
+        'The provided image URL could not be reached. Please use a direct public image link.',
       );
     }
-
-    const contentType = response.headers.get('content-type') || '';
-
-    if (!contentType.startsWith('image/')) {
-      throw new BadRequestException(
-        'The provided URL does not point to a valid image.',
-      );
-    }
-  } catch (error) {
-    if (error instanceof BadRequestException) {
-      throw error;
-    }
-
-    throw new BadRequestException(
-      'The provided image URL could not be reached. Please use a direct public image link.',
-    );
   }
-}
 }

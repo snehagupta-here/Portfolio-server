@@ -7,7 +7,7 @@ import { ImageValidationService } from '../../common/image/image-validation.serv
 
 import { SkillController } from './skill.controller';
 import { SkillService } from './skill.service';
-import { SkillInputResolverService } from '../../pipes/resolve-skill-icon.pipe';
+import { SkillInputResolverService } from '../../pipes/resolve-skill.pipe';
 import { Skill, SkillSchema } from '../../schema/skill.schema';
 
 @Module({

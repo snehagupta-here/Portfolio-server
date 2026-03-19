@@ -6,7 +6,7 @@ import { ExperienceService } from './experience.service';
 import { CloudinaryProvider } from '../../common/cloudinary/cloudinary.provider';
 import { ImageResolverService } from '../../common/image/image-resolver.service';
 import { ImageValidationService } from '../../common/image/image-validation.service';
-import { ExperienceInputResolverService } from 'src/pipes/resolve-experience-icon.pipe';
+import { ExperienceInputResolverService } from 'src/pipes/resolve-experience.pipe';
 import { User, UserSchema } from 'src/schema/user.schema';
 
 @Module({

@@ -11,8 +11,8 @@ import {
 } from '@nestjs/common';
 import { ExperienceService } from './experience.service';
 import { ExperienceDto } from 'src/dto';
-import { ExperienceInputResolverService } from 'src/pipes/resolve-experience-icon.pipe';
-import type { ResolvedExperienceInput } from '../../common/image/image.types';
+import { ExperienceInputResolverService } from 'src/pipes/resolve-experience.pipe';
+import type { ResolvedExperienceInput } from 'src/interfaces';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 

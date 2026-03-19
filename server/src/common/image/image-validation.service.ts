@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ImageValidationOptions } from './image.types';
+import { ImageValidationOptions, FileValidationOptions } from './image.types';
 
 @Injectable()
 export class ImageValidationService {
@@ -60,36 +60,27 @@ export class ImageValidationService {
     }
   }
 
-  validateFile(
+  validateImage(
     file: Express.Multer.File,
     options: ImageValidationOptions = {},
+    name?: string,
   ): void {
-    const allowedMimeTypes =
-      options.allowedMimeTypes ?? this.defaultAllowedMimeTypes;
-    const maxSizeBytes = options.maxSizeBytes ?? this.defaultMaxSizeBytes;
-
-    if (!file) {
-      throw new BadRequestException('Image file is required.');
-    }
-
-    if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException(
-        'Invalid image type. Allowed types are PNG, JPG, JPEG, WEBP, and SVG.',
-      );
-    }
-
-    if (file.size > maxSizeBytes) {
-      throw new BadRequestException(
-        `Image size must be less than ${Math.floor(maxSizeBytes / (1024 * 1024))}MB.`,
-      );
-    }
+    this.validateFile(file, {
+      allowedMimeTypes:
+        options.allowedMimeTypes ?? this.defaultAllowedMimeTypes,
+      maxSizeBytes: options.maxSizeBytes ?? this.defaultMaxSizeBytes,
+      required: true,
+      allowedExtensions: options.allowSvg
+        ? ['png', 'jpg', 'jpeg', 'webp', 'svg']
+        : ['png', 'jpg', 'jpeg', 'webp'],
+    },name);
 
     if (!options.allowSvg && file.mimetype === 'image/svg+xml') {
       throw new BadRequestException('SVG images are not allowed.');
     }
   }
 
-  validateUrl(url: string, options: ImageValidationOptions = {}): URL {
+  validateUrl(url: string, options: ImageValidationOptions = {}, name?: string): URL {
     if (!url?.trim()) {
       throw new BadRequestException('Image URL is required.');
     }
@@ -99,25 +90,25 @@ export class ImageValidationService {
     try {
       parsed = new URL(url);
     } catch {
-      throw new BadRequestException('Please enter a valid image URL.');
+      throw new BadRequestException('Please enter a valid image URL for ' + `${name}`);
     }
 
     const allowedProtocols = options.allowedProtocols ?? ['https:'];
     if (!allowedProtocols.includes(parsed.protocol)) {
-      throw new BadRequestException('Only HTTPS image URLs are allowed.');
+      throw new BadRequestException('Only HTTPS image URLs are allowed for ' + `${name}`);
     }
 
     const hostname = parsed.hostname.toLowerCase();
 
     if (this.isBlockedHost(hostname)) {
       throw new BadRequestException(
-        'Local, private, or non-public image URLs are not allowed.',
+        'Local, private, or non-public image URLs are not allowed for ' + `${name}`
       );
     }
 
     if (!this.hasImageLikePath(parsed)) {
       throw new BadRequestException(
-        'Please provide a direct image URL, not a webpage link.',
+        'Please provide a direct image URL, not a webpage link for ' + `${name}`
       );
     }
 
@@ -125,7 +116,7 @@ export class ImageValidationService {
       options.allowedDomains?.length &&
       !this.matchesAllowedDomain(hostname, options.allowedDomains)
     ) {
-      throw new BadRequestException('This image domain is not allowed.');
+      throw new BadRequestException('This image domain is not allowed for ' + `${name}`);
     }
 
     if (
@@ -182,5 +173,56 @@ export class ImageValidationService {
       const normalized = domain.toLowerCase();
       return hostname === normalized || hostname.endsWith(`.${normalized}`);
     });
+  }
+
+  validateFile(
+    file?: Express.Multer.File,
+    options: FileValidationOptions = {},
+    name?: string
+  ): void {
+    const {
+      allowedMimeTypes,
+      maxSizeBytes = this.defaultMaxSizeBytes,
+      required = true,
+      allowedExtensions,
+    } = options;
+
+    if (!file) {
+      if (required) {
+        throw new BadRequestException(`${name} file is required.`);
+      }
+      return;
+    }
+
+    if (allowedMimeTypes?.length && !allowedMimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        `Invalid file type. Allowed types are: ${allowedMimeTypes.join(', ')} for ` + `${name}`
+      );
+    }
+
+    if (file.size > maxSizeBytes) {
+      throw new BadRequestException(
+        `File size must be less than ${Math.floor(maxSizeBytes / (1024 * 1024))}MB for ` + `${name}`
+      );
+    }
+
+    if (allowedExtensions?.length) {
+      const ext = this.getFileExtension(file.originalname);
+
+      if (
+        !ext ||
+        !allowedExtensions.map((e) => e.toLowerCase()).includes(ext)
+      ) {
+        throw new BadRequestException(
+          `Invalid file extension. Allowed extensions are: ${allowedExtensions.join(', ')} for ` + `${name}`
+        );
+      }
+    }
+  }
+  private getFileExtension(filename?: string): string | null {
+    if (!filename) return null;
+    const idx = filename.lastIndexOf('.');
+    if (idx === -1) return null;
+    return filename.slice(idx + 1).toLowerCase();
   }
 }

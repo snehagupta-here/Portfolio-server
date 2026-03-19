@@ -1,5 +1,4 @@
 import { UploadApiResponse } from 'cloudinary';
-import { SkillCategoryEnum } from 'src/enums';
 export type ImageSourceType = 'file' | 'url';
 
 export interface CloudinaryImageAsset {
@@ -39,30 +38,9 @@ export interface ResolvedImageResult {
   raw: UploadApiResponse;
 }
 
-export interface ResolvedSkillInput {
-  name: string;
-  category: SkillCategoryEnum;
-  icon: {
-    sourceType: 'file' | 'url';
-    file?: Express.Multer.File;
-    url?: string;
-  };
-}
-
-export interface ResolvedExperienceInput {
-  user_id: string;
-  start_date: string;
-  end_date?: string;
-  location?: string;
-  designation: string;
-  description?: string;
-  responsibilities?: string[];
-  organization_name: string;
-  organization_logo_url?: {
-    sourceType: 'file' | 'url';
-    file?: Express.Multer.File;
-    url?: string;
-  };
-  organization_url?: string;
-  tech_stack?: string[];
+export interface FileValidationOptions {
+  allowedMimeTypes?: string[];
+  maxSizeBytes?: number;
+  required?: boolean;
+  allowedExtensions?: string[];
 }

@@ -7,7 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Experience } from 'src/schema/experience.schema';
 import { handleError } from 'src/utils/error-handler';
-import { ResolvedExperienceInput } from 'src/common/image/image.types';
+import { ResolvedExperienceInput } from 'src/interfaces';
 import { ImageResolverService } from '../../common/image/image-resolver.service';
 import { slugify } from 'src/utils/slugify';
 import { User } from 'src/schema/user.schema';
