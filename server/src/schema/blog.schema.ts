@@ -1,153 +1,18 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Document } from 'mongoose';
-import { SectionTypeEnum, ContentTypeEnum } from 'src/enums';
+import { HydratedDocument, Document, Types } from 'mongoose';
+import { SEO, SEOSchema } from './nested-schema/seo.schema';
+import { Metadata, MetadataSchema } from './nested-schema/metadata-schema';
+import { Author, AuthorSchema } from './nested-schema/author.schema';
+import { Media, MediaSchema } from './nested-schema/media.schema';
+import { ContentSection, ContentSectionSchema } from './nested-schema/content-section.schema';
 
 export type BlogDocument = HydratedDocument<Blog>;
 
-@Schema({ _id: false })
-class CodeSnippet {
-  @Prop({ type: String })
-  language!: string;
-
-  @Prop({ type: String })
-  code!: string;
-}
-
-const CodeSnippetSchema = SchemaFactory.createForClass(CodeSnippet);
-
-@Schema({ _id: false })
-class FAQ {
-  @Prop({ type: String })
-  question!: string;
-
-  @Prop({ type: String })
-  answer!: string;
-}
-
-const FAQSchema = SchemaFactory.createForClass(FAQ);
-
-@Schema({ _id: false })
-class SubItem {
-  @Prop({ type: String })
-  subHeading!: string;
-
-  @Prop({ type: String })
-  description!: string;
-
-  @Prop({ type: [String], default: [] })
-  points!: string[];
-
-  @Prop({ type: [String], default: [] })
-  images!: string[];
-
-  @Prop({ type: [CodeSnippetSchema], default: [] })
-  codeSnippet!: CodeSnippet[];
-}
-
-const SubItemSchema = SchemaFactory.createForClass(SubItem);
-
-@Schema({ _id: false })
-class ContentSection {
-  @Prop({ type: String, required: true })
-  id!: string;
-
-  @Prop({
-    type: String,
-    enum: ContentTypeEnum,
-    required: true,
-  })
-  contentType!: ContentTypeEnum;
-
-  @Prop({
-    type: String,
-    enum: SectionTypeEnum,
-    required: true,
-  })
-  type!: SectionTypeEnum;
-
-  @Prop({ type: String })
-  heading!: string;
-
-  @Prop({ type: String })
-  text!: string;
-
-  @Prop({ type: [String], default: [] })
-  points!: string[];
-
-  @Prop({ type: [SubItemSchema], default: [] })
-  items!: SubItem[];
-
-  @Prop({ type: [FAQSchema], default: [] })
-  questions!: FAQ[];
-
-  @Prop({ type: [String], default: [] })
-  images!: string[];
-
-  @Prop({ type: [CodeSnippetSchema], default: [] })
-  codeSnippet!: CodeSnippet[];
-}
-
-const ContentSectionSchema = SchemaFactory.createForClass(ContentSection);
-
-@Schema({ _id: false })
-class Media {
-  @Prop({ type: String })
-  type!: string;
-
-  @Prop({ type: String })
-  thumbnail!: string;
-}
-
-const MediaSchema = SchemaFactory.createForClass(Media);
-
-@Schema({ _id: false })
-class Author {
-  @Prop({ type: String })
-  name!: string;
-
-  @Prop({ type: String })
-  avatar!: string;
-}
-
-const AuthorSchema = SchemaFactory.createForClass(Author);
-
-@Schema({ _id: false })
-class Metadata {
-  @Prop({ type: Date })
-  publishedDate!: Date;
-
-  @Prop({ type: Date })
-  lastModified!: Date;
-
-  @Prop({ type: Boolean, default: false })
-  featured!: boolean;
-
-  @Prop({ type: Number })
-  readTime!: number;
-
-  @Prop({ default: 0 }) views!: number;
-
-  @Prop({ default: 0 }) likes!: number;
-}
-
-const MetadataSchema = SchemaFactory.createForClass(Metadata);
-
-@Schema({ _id: false })
-class SEO {
-  @Prop({ type: String })
-  metaTitle!: string;
-
-  @Prop({ type: String })
-  metaDescription!: string;
-
-  @Prop({ type: [String], default: [] })
-  keywords!: string[];
-}
-
-const SEOSchema = SchemaFactory.createForClass(SEO);
-
 @Schema({ collection: 'blogs', timestamps: true })
 export class Blog extends Document {
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  user_id!: Types.ObjectId;
+
   @Prop({ type: String })
   title!: string;
 

@@ -9,6 +9,7 @@ import { AchievementModule } from './modules/achievement/achievement.module';
 import { TestimonialModule } from './modules/testimonial/testimonial.module';
 import { BlogModule } from './modules/blog/blog.module';
 import { ContactUsModule } from './modules/contact-us/contact-us.module';
+import { ProjectModule } from './modules/project/project.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ContactUsModule } from './modules/contact-us/contact-us.module';
 }),
 
     UserModule,
+    ProjectModule,
     SkillModule,
     ExperienceModule,
     AchievementModule,

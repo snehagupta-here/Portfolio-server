@@ -65,22 +65,30 @@ export class ImageValidationService {
     options: ImageValidationOptions = {},
     name?: string,
   ): void {
-    this.validateFile(file, {
-      allowedMimeTypes:
-        options.allowedMimeTypes ?? this.defaultAllowedMimeTypes,
-      maxSizeBytes: options.maxSizeBytes ?? this.defaultMaxSizeBytes,
-      required: true,
-      allowedExtensions: options.allowSvg
-        ? ['png', 'jpg', 'jpeg', 'webp', 'svg']
-        : ['png', 'jpg', 'jpeg', 'webp'],
-    },name);
+    this.validateFile(
+      file,
+      {
+        allowedMimeTypes:
+          options.allowedMimeTypes ?? this.defaultAllowedMimeTypes,
+        maxSizeBytes: options.maxSizeBytes ?? this.defaultMaxSizeBytes,
+        required: true,
+        allowedExtensions: options.allowSvg
+          ? ['png', 'jpg', 'jpeg', 'webp', 'svg']
+          : ['png', 'jpg', 'jpeg', 'webp'],
+      },
+      name,
+    );
 
     if (!options.allowSvg && file.mimetype === 'image/svg+xml') {
       throw new BadRequestException('SVG images are not allowed.');
     }
   }
 
-  validateUrl(url: string, options: ImageValidationOptions = {}, name?: string): URL {
+  validateUrl(
+    url: string,
+    options: ImageValidationOptions = {},
+    name?: string,
+  ): URL {
     if (!url?.trim()) {
       throw new BadRequestException('Image URL is required.');
     }
@@ -90,25 +98,31 @@ export class ImageValidationService {
     try {
       parsed = new URL(url);
     } catch {
-      throw new BadRequestException('Please enter a valid image URL for ' + `${name}`);
+      throw new BadRequestException(
+        'Please enter a valid image URL for ' + `${name}`,
+      );
     }
 
     const allowedProtocols = options.allowedProtocols ?? ['https:'];
     if (!allowedProtocols.includes(parsed.protocol)) {
-      throw new BadRequestException('Only HTTPS image URLs are allowed for ' + `${name}`);
+      throw new BadRequestException(
+        'Only HTTPS image URLs are allowed for ' + `${name}`,
+      );
     }
 
     const hostname = parsed.hostname.toLowerCase();
 
     if (this.isBlockedHost(hostname)) {
       throw new BadRequestException(
-        'Local, private, or non-public image URLs are not allowed for ' + `${name}`
+        'Local, private, or non-public image URLs are not allowed for ' +
+          `${name}`,
       );
     }
 
     if (!this.hasImageLikePath(parsed)) {
       throw new BadRequestException(
-        'Please provide a direct image URL, not a webpage link for ' + `${name}`
+        'Please provide a direct image URL, not a webpage link for ' +
+          `${name}`,
       );
     }
 
@@ -116,7 +130,9 @@ export class ImageValidationService {
       options.allowedDomains?.length &&
       !this.matchesAllowedDomain(hostname, options.allowedDomains)
     ) {
-      throw new BadRequestException('This image domain is not allowed for ' + `${name}`);
+      throw new BadRequestException(
+        'This image domain is not allowed for ' + `${name}`,
+      );
     }
 
     if (
@@ -178,7 +194,7 @@ export class ImageValidationService {
   validateFile(
     file?: Express.Multer.File,
     options: FileValidationOptions = {},
-    name?: string
+    name?: string,
   ): void {
     const {
       allowedMimeTypes,
@@ -196,13 +212,15 @@ export class ImageValidationService {
 
     if (allowedMimeTypes?.length && !allowedMimeTypes.includes(file.mimetype)) {
       throw new BadRequestException(
-        `Invalid file type. Allowed types are: ${allowedMimeTypes.join(', ')} for ` + `${name}`
+        `Invalid file type. Allowed types are: ${allowedMimeTypes.join(', ')} for ` +
+          `${name}`,
       );
     }
 
     if (file.size > maxSizeBytes) {
       throw new BadRequestException(
-        `File size must be less than ${Math.floor(maxSizeBytes / (1024 * 1024))}MB for ` + `${name}`
+        `File size must be less than ${Math.floor(maxSizeBytes / (1024 * 1024))}MB for ` +
+          `${name}`,
       );
     }
 
@@ -214,7 +232,8 @@ export class ImageValidationService {
         !allowedExtensions.map((e) => e.toLowerCase()).includes(ext)
       ) {
         throw new BadRequestException(
-          `Invalid file extension. Allowed extensions are: ${allowedExtensions.join(', ')} for ` + `${name}`
+          `Invalid file extension. Allowed extensions are: ${allowedExtensions.join(', ')} for ` +
+            `${name}`,
         );
       }
     }

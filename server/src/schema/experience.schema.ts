@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Document, Types } from 'mongoose';
-import { ImageAsset, ImageAssetSchema } from './image-asset.schema';
+import { ImageAsset, ImageAssetSchema } from './nested-schema/image-asset.schema';
 
 export type ExperienceDocument = HydratedDocument<Experience>;
 

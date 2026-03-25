@@ -4,19 +4,42 @@ import {
   Body,
   Get,
   Param,
-  Put,
+  Patch,
   Delete,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
 import { BlogService } from './blog.service';
-import { BlogDto } from 'src/dto';
+import { CreateBlogDto, UpdateBlogDto } from 'src/dto';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { BlogInputResolverService } from 'src/pipes/resolve-blog.pipe';
+import { ResolvedBlogInput, ResolvedBlogUpdateInput } from 'src/interfaces';
 
 @Controller('blog')
 export class BlogController {
-  constructor(private readonly blogService: BlogService) {}
+  constructor(
+    private readonly blogService: BlogService,
+    private readonly blogInputResolverService: BlogInputResolverService,
+  ) {}
 
   @Post()
-  async create(@Body() body: BlogDto) {
-    return await this.blogService.createBlog(body);
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  async create(
+    @Body() body: CreateBlogDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    const input: ResolvedBlogInput =
+      this.blogInputResolverService.resolveCreate(body, files);
+
+    return this.blogService.createBlog(input);
   }
 
   @Get()
@@ -29,12 +52,24 @@ export class BlogController {
     return await this.blogService.getBlogById(id);
   }
 
-  @Put(':id')
+  @Patch(':id')
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
   async update(
     @Param('id') id: string,
-    @Body() body: Partial<BlogDto>,
+    @Body() body: UpdateBlogDto,
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
-    return await this.blogService.updateBlog(id, body);
+    const input: ResolvedBlogUpdateInput =
+      this.blogInputResolverService.resolveUpdate(body, files);
+
+    return this.blogService.updateBlog(id, input);
   }
 
   @Delete(':id')

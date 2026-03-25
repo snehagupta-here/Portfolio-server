@@ -6,3 +6,4 @@ export * from './skill.dto';
 export * from './blog.dto';
 export * from './user.dto';
 export * from './project.dto';
+export * from './common.dto';

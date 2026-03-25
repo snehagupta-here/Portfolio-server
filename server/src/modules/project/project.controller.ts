@@ -5,26 +5,48 @@ import {
   Get,
   Param,
   Patch,
-  Delete
+  Delete,
 } from '@nestjs/common';
-
+import { UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import {
+  ResolvedProjectInput,
+  ResolvedProjectUpdateInput,
+} from 'src/interfaces';
 import { ProjectService } from './project.service';
-import { ProjectDto } from 'src/dto/project.dto';
+import { CreateProjectDto, UpdateProjectDto } from 'src/dto/project.dto';
+import { ProjectInputResolverService } from 'src/pipes/resolve-project.pipe';
 
 @Controller('project')
 export class ProjectController {
-
   constructor(
-    private readonly projectService: ProjectService
+    private readonly projectService: ProjectService,
+    private readonly projectInputResolverService: ProjectInputResolverService,
   ) {}
 
   @Post()
-  async createProject(@Body() body: ProjectDto) {
-    return this.projectService.createProject(body);
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  async create(
+    @Body() body: CreateProjectDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    const input: ResolvedProjectInput =
+      this.projectInputResolverService.resolveCreate(body, files);
+
+    return this.projectService.createProject(input);
   }
 
   @Get()
   async getAllProjects() {
+    console.log("hey hye")
     return this.projectService.getAllProjects();
   }
 
@@ -34,11 +56,23 @@ export class ProjectController {
   }
 
   @Patch(':id')
-  async updateProject(
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      storage: memoryStorage(),
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  async update(
     @Param('id') id: string,
-    @Body() body: Partial<ProjectDto>
+    @Body() body: UpdateProjectDto,
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
-    return this.projectService.updateProject(id, body);
+    const input: ResolvedProjectUpdateInput =
+      this.projectInputResolverService.resolveUpdate(body, files);
+
+    return this.projectService.updateProject(id, input);
   }
 
   @Delete(':id')

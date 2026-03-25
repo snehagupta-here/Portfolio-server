@@ -1,35 +1,31 @@
 import {
-  IsString,
   IsOptional,
+  IsString,
   IsArray,
   ValidateNested,
   IsBoolean,
-  IsEnum,
-  IsDateString,
-  IsNumber,
+  IsMongoId,
+  IsNotEmpty,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { SectionTypeEnum, ContentTypeEnum } from 'src/enums';
+import {
+  ContentSectionDto,
+  MediaDto,
+  AuthorDto,
+  MetadataDto,
+  SEODto,
+} from './common.dto';
 
-class CodeSnippetDto {
-  @IsString()
-  language!: string;
+export class CreateBlogDto {
+  @IsMongoId()
+  @IsNotEmpty()
+  user_id!: string;
 
   @IsString()
-  code!: string;
-}
-
-class FAQDto {
-  @IsString()
-  question!: string;
+  title!: string;
 
   @IsString()
-  answer!: string;
-}
-
-class SubItemDto {
-  @IsString()
-  subHeading!: string;
+  slug!: string;
 
   @IsOptional()
   @IsString()
@@ -37,127 +33,43 @@ class SubItemDto {
 
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
-  points?: string[];
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  images?: string[];
-
-  @IsOptional()
-  @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CodeSnippetDto)
-  codeSnippet?: CodeSnippetDto[];
-}
-
-class ContentSectionDto {
-  @IsString()
-  id!: string;
-
-  @IsEnum(ContentTypeEnum)
-  contentType!: ContentTypeEnum;
-
-  @IsEnum(SectionTypeEnum)
-  type!: SectionTypeEnum;
+  @Type(() => ContentSectionDto)
+  content?: ContentSectionDto[];
 
   @IsOptional()
-  @IsString()
-  heading?: string;
+  @ValidateNested()
+  @Type(() => MediaDto)
+  media?: MediaDto;
 
   @IsOptional()
-  @IsString()
-  text?: string;
+  @ValidateNested()
+  @Type(() => AuthorDto)
+  author?: AuthorDto;
 
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  points?: string[];
+  @ValidateNested()
+  @Type(() => MetadataDto)
+  metadata?: MetadataDto;
 
   @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => SubItemDto)
-  items?: SubItemDto[];
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => FAQDto)
-  questions?: FAQDto[];
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  images?: string[];
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CodeSnippetDto)
-  codeSnippet?: CodeSnippetDto[];
-}
-
-class MediaDto {
-  @IsOptional()
-  @IsString()
-  type?: string;
-
-  @IsOptional()
-  @IsString()
-  thumbnail?: string;
-}
-
-class AuthorDto {
-  @IsOptional()
-  @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsString()
-  avatar?: string;
-}
-
-class MetadataDto {
-  @IsOptional()
-  @IsDateString()
-  publishedDate?: string;
-
-  @IsOptional()
-  @IsDateString()
-  lastModified?: string;
+  @ValidateNested()
+  @Type(() => SEODto)
+  seo?: SEODto;
 
   @IsOptional()
   @IsBoolean()
-  featured?: boolean;
-
-  @IsOptional()
-  @IsNumber()
-  readTime?: number;
+  isActive?: boolean;
 }
 
-class SEODto {
+export class UpdateBlogDto {
   @IsOptional()
   @IsString()
-  metaTitle?: string;
+  title?: string;
 
   @IsOptional()
   @IsString()
-  metaDescription?: string;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  keywords?: string[];
-}
-
-export class BlogDto {
-  @IsString()
-  title!: string;
-
-  @IsString()
-  slug!: string;
+  slug?: string;
 
   @IsOptional()
   @IsString()

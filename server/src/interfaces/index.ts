@@ -6,3 +6,4 @@ export * from './skill.interface';
 export * from './blog.interface';
 export * from './user.interface';
 export * from './project.interface';
+export * from './common.interface';

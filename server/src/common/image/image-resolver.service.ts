@@ -25,16 +25,21 @@ export class ImageResolverService {
   async resolveSingleImage(
     input: ResolveImageInput,
     options: ResolveImageOptions,
+    fieldName?: string,
   ): Promise<ResolvedImageResult> {
     this.imageValidationService.validateRequiredImageInput(input);
 
     if (input.file) {
-      const raw = await this.uploadBuffer(input.file.buffer, {
-        folder: options.folder,
-        public_id: options.publicId,
-        overwrite: options.overwrite ?? true,
-        resource_type: 'image',
-      });
+      const raw = await this.uploadBuffer(
+        input.file.buffer,
+        {
+          folder: options.folder,
+          public_id: options.publicId,
+          overwrite: options.overwrite ?? true,
+          resource_type: 'image',
+        },
+        fieldName,
+      );
 
       return {
         sourceType: 'file',
@@ -43,14 +48,18 @@ export class ImageResolverService {
       };
     }
 
-    await this.assertRemoteImageReachable(input.url!);
+    await this.assertRemoteImageReachable(input.url!, fieldName);
 
-    const raw = await this.uploadRemoteUrl(input.url!, {
-      folder: options.folder,
-      public_id: options.publicId,
-      overwrite: options.overwrite ?? true,
-      resource_type: 'image',
-    });
+    const raw = await this.uploadRemoteUrl(
+      input.url!,
+      {
+        folder: options.folder,
+        public_id: options.publicId,
+        overwrite: options.overwrite ?? true,
+        resource_type: 'image',
+      },
+      fieldName,
+    );
 
     return {
       sourceType: 'url',
@@ -62,13 +71,17 @@ export class ImageResolverService {
   async uploadBuffer(
     buffer: Buffer,
     options: UploadApiOptions = {},
+    fieldName?: string,
   ): Promise<UploadApiResponse> {
     return new Promise((resolve, reject) => {
       const stream = this.cloudinaryClient.uploader.upload_stream(
         options,
         (error, result) => {
           if (error) return reject(error);
-          if (!result) return reject(new Error('Cloudinary upload failed'));
+          if (!result)
+            return reject(
+              new Error('Cloudinary upload failed for ' + `${fieldName}`),
+            );
           resolve(result);
         },
       );
@@ -80,8 +93,15 @@ export class ImageResolverService {
   async uploadRemoteUrl(
     fileUrl: string,
     options: UploadApiOptions = {},
+    fieldName = 'file',
   ): Promise<UploadApiResponse> {
-    return this.cloudinaryClient.uploader.upload(fileUrl, options);
+    try {
+      return await this.cloudinaryClient.uploader.upload(fileUrl, options);
+    } catch (error: any) {
+      throw new BadRequestException(
+        `${fieldName}: ${error?.message || 'Remote upload failed'}`,
+      );
+    }
   }
 
   async destroy(publicId: string) {
@@ -100,8 +120,10 @@ export class ImageResolverService {
       originalFilename: raw.original_filename,
     };
   }
-
-  private async assertRemoteImageReachable(fileUrl: string): Promise<void> {
+  private async assertRemoteImageReachable(
+    fileUrl: string,
+    fieldName?: string,
+  ): Promise<void> {
     try {
       const response = await fetch(fileUrl, {
         method: 'GET',
@@ -110,7 +132,8 @@ export class ImageResolverService {
 
       if (!response.ok) {
         throw new BadRequestException(
-          'The provided image URL is not publicly reachable.',
+          'The provided image URL is not publicly reachable for ' +
+            `${fieldName}`,
         );
       }
 
@@ -118,7 +141,8 @@ export class ImageResolverService {
 
       if (!contentType.startsWith('image/')) {
         throw new BadRequestException(
-          'The provided URL does not point to a valid image.',
+          'The provided URL does not point to a valid image for ' +
+            `${fieldName}`,
         );
       }
     } catch (error) {
@@ -127,7 +151,8 @@ export class ImageResolverService {
       }
 
       throw new BadRequestException(
-        'The provided image URL could not be reached. Please use a direct public image link.',
+        'The provided image URL could not be reached. Please use a direct public image link for ' +
+          `${fieldName}`,
       );
     }
   }
