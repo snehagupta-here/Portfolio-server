@@ -3765,7 +3765,6 @@ components:
         - start_date
         - designation
         - organization_name
-        - organization_logo_url
       properties:
         user_id:
           type: string
@@ -3790,8 +3789,12 @@ components:
         organization_logo_url:
           $ref: '#/components/schemas/CloudinaryAsset'
         organization_url:
-          type: string
-          format: uri
+          oneOf:
+            - type: string
+              format: uri
+            - type: string
+              enum:
+                - ''
         tech_stack:
           type: array
           items:
@@ -3821,8 +3824,12 @@ components:
         organization_logo_url:
           $ref: '#/components/schemas/CloudinaryAsset'
         organization_url:
-          type: string
-          format: uri
+          oneOf:
+            - type: string
+              format: uri
+            - type: string
+              enum:
+                - ''
         tech_stack:
           type: array
           items:

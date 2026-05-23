@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsDateString,
@@ -7,9 +7,16 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { CloudinaryAssetDto } from './cloudinary.dto';
+
+const trimString = ({ value }: { value: unknown }) =>
+  typeof value === 'string' ? value.trim() : value;
+
+const normalizeOptionalAsset = ({ value }: { value: unknown }) =>
+  value === '' || value === null ? undefined : value;
 
 export class ExperienceDto {
   @IsMongoId({
@@ -62,11 +69,15 @@ export class ExperienceDto {
   @IsNotEmpty({ message: 'organization_name: organization_name is required' })
   organization_name!: string;
 
+  @Transform(normalizeOptionalAsset)
+  @IsOptional()
   @ValidateNested()
   @Type(() => CloudinaryAssetDto)
-  organization_logo_url!: CloudinaryAssetDto;
+  organization_logo_url?: CloudinaryAssetDto;
 
   @IsOptional()
+  @Transform(trimString)
+  @ValidateIf((_, value) => value !== '')
   @IsUrl(
     {},
     { message: 'organization_url: organization_url must be a valid URL' },
@@ -128,11 +139,14 @@ export class UpdateExperienceDto {
   organization_name?: string;
 
   @IsOptional()
+  @Transform(normalizeOptionalAsset)
   @ValidateNested()
   @Type(() => CloudinaryAssetDto)
   organization_logo_url?: CloudinaryAssetDto;
 
   @IsOptional()
+  @Transform(trimString)
+  @ValidateIf((_, value) => value !== '')
   @IsUrl(
     {},
     { message: 'organization_url: organization_url must be a valid URL' },

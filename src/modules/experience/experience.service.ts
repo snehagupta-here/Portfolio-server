@@ -10,10 +10,15 @@ import {
   InvalidExperienceIdException,
   InvalidExperienceUserIdException,
 } from 'src/exceptions/experience.exceptions';
-import { ResolvedExperienceInput, UpdateExperience } from 'src/interfaces';
+import {
+  CloudinaryImageAsset,
+  ResolvedExperienceInput,
+  UpdateExperience,
+} from 'src/interfaces';
 import { Experience, ExperienceDocument } from 'src/schema/experience.schema';
 import { User, UserDocument } from 'src/schema/user.schema';
 import { handleError } from 'src/utils/error-handler';
+import { slugify } from 'src/utils/slugify';
 
 @Injectable()
 export class ExperienceService {
@@ -27,6 +32,10 @@ export class ExperienceService {
   async createExperience(body: ResolvedExperienceInput) {
     try {
       const userId = await this.resolveValidatedUserId(body.user_id);
+      const organizationLogo = this.resolveOrganizationLogo(
+        body.organization_name,
+        body.organization_logo_url,
+      );
 
       const startDate = new Date(body.start_date);
       const existingExperience = await this.experienceCollection.findOne({
@@ -49,8 +58,8 @@ export class ExperienceService {
         description: body.description,
         responsibilities: body.responsibilities,
         organization_name: body.organization_name,
-        organization_logo_url: body.organization_logo_url,
-        organization_url: body.organization_url,
+        organization_logo_url: organizationLogo,
+        organization_url: this.normalizeOrganizationUrl(body.organization_url),
         tech_stack: body.tech_stack,
       });
 
@@ -212,11 +221,23 @@ export class ExperienceService {
       }
 
       if (body.organization_logo_url !== undefined) {
-        experience.organization_logo_url = body.organization_logo_url;
+        experience.organization_logo_url = this.resolveOrganizationLogo(
+          experience.organization_name,
+          body.organization_logo_url,
+        );
       }
 
       if (body.organization_url !== undefined) {
-        experience.organization_url = body.organization_url;
+        experience.organization_url = this.normalizeOrganizationUrl(
+          body.organization_url,
+        );
+      }
+
+      if (!experience.organization_logo_url?.secureUrl) {
+        experience.organization_logo_url = this.resolveOrganizationLogo(
+          experience.organization_name,
+          experience.organization_logo_url,
+        );
       }
 
       if (body.tech_stack !== undefined) {
@@ -305,5 +326,59 @@ export class ExperienceService {
 
   private escapeRegex(value: string): string {
     return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private normalizeOrganizationUrl(url?: string): string {
+    return url?.trim() ?? '';
+  }
+
+  private resolveOrganizationLogo(
+    organizationName: string,
+    organizationLogo?: CloudinaryImageAsset,
+  ): CloudinaryImageAsset {
+    if (organizationLogo?.secureUrl) {
+      return organizationLogo;
+    }
+
+    const normalizedOrganizationName = organizationName.trim();
+    const initials = normalizedOrganizationName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('');
+    const palette = [
+      { background: '0F766E', color: 'F8FAFC' },
+      { background: '1D4ED8', color: 'F8FAFC' },
+      { background: 'B45309', color: 'FFFBEB' },
+      { background: '7C3AED', color: 'FAF5FF' },
+      { background: 'BE123C', color: 'FFF1F2' },
+    ];
+    const paletteIndex =
+      Array.from(normalizedOrganizationName).reduce(
+        (sum, char) => sum + char.charCodeAt(0),
+        0,
+      ) % palette.length;
+    const { background, color } = palette[paletteIndex];
+    const slug = slugify(normalizedOrganizationName) || 'organization';
+    const query = new URLSearchParams({
+      name: initials || 'ORG',
+      background,
+      color,
+      size: '256',
+      format: 'svg',
+      rounded: 'true',
+      bold: 'true',
+    });
+
+    return {
+      publicId: `generated/experience/${slug}-logo`,
+      secureUrl: `https://ui-avatars.com/api/?${query.toString()}`,
+      width: 256,
+      height: 256,
+      format: 'svg',
+      resourceType: 'image',
+      originalFilename: `${slug}-logo.svg`,
+    };
   }
 }
