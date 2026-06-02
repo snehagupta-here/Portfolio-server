@@ -1,4 +1,3 @@
-import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDateString,
@@ -8,7 +7,6 @@ import {
   IsOptional,
   IsString,
   Validate,
-  ValidateNested,
   ValidationArguments,
   ValidatorConstraint,
   ValidatorConstraintInterface,
@@ -145,9 +143,8 @@ export class AchievementDto {
 
   @IsArray()
   @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => CloudinaryAssetDto)
-  images?: CloudinaryAssetDto[];
+  @Validate(IsCloudinaryAssetOrUrlConstraint, { each: true })
+  images?: (CloudinaryAssetDto | string)[];
 
   @IsOptional()
   @Validate(IsCloudinaryAssetOrUrlConstraint)
@@ -179,9 +176,8 @@ export class UpdateAchievementDto {
 
   @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CloudinaryAssetDto)
-  images?: CloudinaryAssetDto[];
+  @Validate(IsCloudinaryAssetOrUrlConstraint, { each: true })
+  images?: (CloudinaryAssetDto | string)[];
 
   @IsOptional()
   @Validate(IsCloudinaryAssetOrUrlConstraint)

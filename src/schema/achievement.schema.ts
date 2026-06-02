@@ -6,7 +6,7 @@ import {
   Types,
 } from 'mongoose';
 import { PositionEnum } from 'src/enums';
-import { ImageAsset, ImageAssetSchema } from './image-asset.schema';
+import { ImageAsset } from './image-asset.schema';
 
 export type AchievementDocument = HydratedDocument<Achievement>;
 
@@ -34,8 +34,8 @@ export class Achievement extends Document {
   @Prop({ type: String, required: true })
   competition_name!: string;
 
-  @Prop({ type: [ImageAssetSchema], default: [] })
-  images!: ImageAsset[] | string[];
+  @Prop({ type: [MongooseSchema.Types.Mixed], default: [] })
+  images!: (ImageAsset | string)[];
 
   @Prop({ type: MongooseSchema.Types.Mixed })
   certificate_url!: ImageAsset | string;

@@ -8,7 +8,7 @@ export interface CreateAchievement {
   position: PositionEnum;
   description?: string;
   competition_name: string;
-  images?: CloudinaryImageAsset[] | string[];
+  images?: (CloudinaryImageAsset | string)[];
   certificate_url?: CloudinaryImageAsset | string;
 }
 
@@ -18,6 +18,6 @@ export interface UpdateAchievement {
   position?: PositionEnum;
   description?: string;
   competition_name?: string;
-  images?: CloudinaryImageAsset[];
+  images?: (CloudinaryImageAsset | string)[];
   certificate_url?: CloudinaryImageAsset | string;
 }
