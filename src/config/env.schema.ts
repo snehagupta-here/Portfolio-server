@@ -8,6 +8,8 @@ export const envSchema = z.object({
     .default('development'),
   PORT: z.coerce.number().int().positive().default(configDefaults.app.port),
   CLIENT_URL: z.string().trim().min(1, 'CLIENT_URL is required'),
+  GITHUB_USERNAME: z.string().trim().optional().default(''),
+  GITHUB_TOKEN: z.string().trim().optional().default(''),
   DB_URL: z
     .string()
     .trim()

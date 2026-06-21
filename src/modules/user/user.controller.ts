@@ -6,7 +6,9 @@ import {
   Param,
   Patch,
   Query,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 
 import { SearchUserQueryDto, UpdateUserDto } from 'src/dto';
 
@@ -26,6 +28,27 @@ export class UserController {
     return await this.userService.searchUsers(query);
   }
 
+  @Get(':id/download-resume')
+  async downloadResume(@Param('id') id: string, @Res() res: Response) {
+    const resume = await this.userService.downloadResume(id);
+
+    res.set({
+      'Content-Type': resume.contentType,
+      'Content-Disposition': `attachment; filename="${resume.fileName}"`,
+      'Content-Length': resume.buffer.length.toString(),
+    });
+
+    return res.send(resume.buffer);
+  }
+
+  @Get('contributions')
+  getContributions(@Query('year') year?: string) {
+    console.log("Received year query parameter:", year);
+    const selectedYear = year ? Number(year) : new Date().getFullYear();
+
+    return this.userService.getContributions(selectedYear);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.userService.getUserById(id);
@@ -40,4 +63,6 @@ export class UserController {
   async remove(@Param('id') id: string) {
     return await this.userService.deleteUser(id);
   }
+
+  
 }

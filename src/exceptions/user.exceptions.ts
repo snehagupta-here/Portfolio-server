@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 
 export class UserAlreadyExistsException extends BadRequestException {
   constructor() {
@@ -68,6 +72,24 @@ export class UserNotFoundException extends NotFoundException {
     super({
       message: 'User not found',
       error: 'Not Found',
+    });
+  }
+}
+
+export class UserResumeNotFoundException extends NotFoundException {
+  constructor() {
+    super({
+      message: 'User resume not found',
+      error: 'Not Found',
+    });
+  }
+}
+
+export class UserResumeDownloadFailedException extends BadGatewayException {
+  constructor() {
+    super({
+      message: 'Failed to download user resume',
+      error: 'Bad Gateway',
     });
   }
 }
