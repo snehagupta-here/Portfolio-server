@@ -16,6 +16,7 @@ import { Skill } from 'src/schema/skill.schema';
 import { User, UserDocument } from 'src/schema/user.schema';
 import { handleError } from 'src/utils/error-handler';
 import { GithubCache, GithubCacheDocument } from 'src/schema/github.schema';
+import * as crypto from 'crypto';
 interface DownloadedResume {
   buffer: Buffer;
   contentType: string;
@@ -24,6 +25,8 @@ interface DownloadedResume {
 
 @Injectable()
 export class UserService {
+  private readonly algorithm = 'aes-256-gcm';
+  private readonly secretKey: Buffer;
   constructor(
     @InjectModel(User.name)
     private readonly userCollection: Model<UserDocument>,
@@ -32,7 +35,12 @@ export class UserService {
     @InjectModel(GithubCache.name)
     private readonly githubCacheModel: Model<GithubCacheDocument>,
     private readonly configService: ConfigService,
-  ) { }
+  ) {
+    this.secretKey = Buffer.from(
+      this.configService.getOrThrow<string>('ENCRYPTION_KEY'),
+      'hex',
+    );
+  }
 
   async getAllUsers() {
     try {
@@ -63,7 +71,7 @@ export class UserService {
       if (!user) {
         throw new UserNotFoundException();
       }
-
+console.log('Fetched user:', user); // Log the fetched user for debugging
       return {
         success: true,
         data: user,
@@ -138,7 +146,8 @@ export class UserService {
       const arrayBuffer = await resumeResponse.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       const contentType =
-        resumeResponse.headers.get('content-type') ?? 'application/octet-stream';
+        resumeResponse.headers.get('content-type') ??
+        'application/octet-stream';
 
       return {
         buffer,
@@ -186,6 +195,10 @@ export class UserService {
         user.avatar = body.avatar;
       }
 
+      if (body.aboutImage !== undefined) {
+        user.aboutImage = body.aboutImage;
+      }
+
       if (body.aboutHeading !== undefined) {
         user.aboutHeading = body.aboutHeading;
       }
@@ -224,6 +237,19 @@ export class UserService {
 
       if (body.resume !== undefined) {
         user.resume = body.resume;
+      }
+
+      if (body.env) {
+        const env = {
+          ...user.env,
+          ...body.env,
+        };
+
+        if (body.env.githubToken) {
+          env.githubToken = this.encrypt(body.env.githubToken);
+        }
+
+        user.env = env;
       }
 
       await user.save();
@@ -349,17 +375,24 @@ export class UserService {
     return sanitized || 'resume';
   }
 
-  async getContributions(year: number) {
-    const token = this.configService.getOrThrow<string>('GITHUB_TOKEN');
-    const cacheKey = `github-contributions:${year}`;
-    const cached = await this.githubCacheModel.findOne({
-      key: cacheKey,
-      expiresAt: { $gt: new Date() },
+  async getContributions(id: string, year: number) {
+    const cache = await this.githubCacheModel.findOne({
+      user_id: id,
     });
+    const user = await this.userCollection
+      .findById(id)
+      .select('env.githubToken');
 
-    if (cached) {
-      console.log('Returning GitHub contributions from DB cache:', cacheKey);
-      return cached.data;
+    if (!user?.env?.githubToken) {
+      throw new BadGatewayException('GitHub token not found for user');
+    }
+
+    const token = this.decrypt(user.env.githubToken);
+    const yearCache = cache?.data?.[year];
+
+    if (yearCache && new Date(yearCache.expiresAt) > new Date()) {
+      console.log(`Returning GitHub contributions for ${year} from cache`);
+      return yearCache.result;
     }
 
     const from = `${year}-01-01T00:00:00Z`;
@@ -406,9 +439,6 @@ export class UserService {
 
     const data = await response.json();
 
-    console.log('GitHub status:', response.status);
-    console.log('GitHub data:', JSON.stringify(data, null, 2));
-
     if (!response.ok || data.errors) {
       console.error('GitHub API error:', data.errors ?? data);
       throw new BadGatewayException('Failed to fetch GitHub contributions');
@@ -419,21 +449,6 @@ export class UserService {
     const calendar = collection.contributionCalendar;
 
     const days = calendar.weeks.flatMap((week) => week.contributionDays);
-
-    console.log('GitHub viewer:', viewer.login);
-    console.log('Calendar total:', calendar.totalContributions);
-    console.log('PR total:', collection.totalPullRequestContributions);
-    console.log('Restricted:', collection.restrictedContributionsCount);
-
-    console.table(
-      days
-        .filter((day) => day.contributionCount > 0)
-        .map((day) => ({
-          date: day.date,
-          count: day.contributionCount,
-          color: day.color,
-        })),
-    );
     const SIX_HOURS_IN_MS = 1000 * 60 * 60 * 6;
     const result = {
       year,
@@ -446,18 +461,23 @@ export class UserService {
       currentStreak: this.calculateCurrentStreak(days),
       weeks: calendar.weeks,
     };
+
     await this.githubCacheModel.findOneAndUpdate(
-      { key: cacheKey },
+      { user_id: id },
       {
-        key: cacheKey,
-        data: result,
-        expiresAt: new Date(Date.now() + SIX_HOURS_IN_MS),
+        $set: {
+          [`data.${year}`]: {
+            result,
+            expiresAt: new Date(Date.now() + SIX_HOURS_IN_MS),
+          },
+        },
       },
       {
         upsert: true,
         new: true,
       },
     );
+
     return result;
   }
 
@@ -492,5 +512,33 @@ export class UserService {
     }
 
     return streak;
+  }
+
+  private encrypt(text: string): string {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(this.algorithm, this.secretKey, iv);
+
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+
+    const authTag = cipher.getAuthTag();
+
+    const encryptedToken = `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
+    return encryptedToken;
+  }
+
+  private decrypt(encryptedText): string {
+    const [ivHex, authTagHex, encrypted] = encryptedText.split(':');
+    const decipher = crypto.createDecipheriv(
+      this.algorithm,
+      this.secretKey,
+      Buffer.from(ivHex, 'hex'),
+    );
+
+    decipher.setAuthTag(Buffer.from(authTagHex, 'hex'));
+
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
   }
 }

@@ -1,18 +1,23 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Document } from 'mongoose';
-
+import { HydratedDocument, Document, Types } from 'mongoose';
 export type GithubCacheDocument = HydratedDocument<GithubCache>;
 
-@Schema({ collection: 'github_cache', timestamps: true })
+@Schema({ collection: 'github', timestamps: true })
 export class GithubCache extends Document {
-  @Prop({ required: true, unique: true })
-  key: string;
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true,
+    index: true,
+  })
+  user_id!: Types.ObjectId;
 
-  @Prop({ required: true, type: Object })
-  data: Record<string, any>;
+  @Prop({ type: Object, default: {} })
+  data!: Record<string, any>;
 
   @Prop({ required: true })
-  expiresAt: Date;
+  githubToken!: string;
 }
 
 export const GithubCacheSchema = SchemaFactory.createForClass(GithubCache);

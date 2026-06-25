@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, HydratedDocument, Types } from 'mongoose';
+import { envSchema } from 'src/config';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -75,6 +76,12 @@ export class UserSkill {
   scale!: number;
 }
 
+@Schema({ _id: false })
+export class UserEnvSchema {
+  @Prop({ type: String })
+  githubToken!: string;
+}
+
 const UserSkillSchema = SchemaFactory.createForClass(UserSkill);
 
 @Schema({ collection: 'users', timestamps: true })
@@ -107,6 +114,9 @@ export class User extends Document {
   avatar?: UserFileAsset;
 
   @Prop({ type: UserFileAssetSchema })
+  aboutImage?: UserFileAsset;
+
+  @Prop({ type: UserFileAssetSchema })
   resume?: UserFileAsset;
 
   @Prop({ type: String })
@@ -135,6 +145,9 @@ export class User extends Document {
 
   @Prop({ type: [UserSkillSchema], default: [] })
   skills!: UserSkill[];
+
+  @Prop({ type: UserEnvSchema })
+  env!: UserEnvSchema;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

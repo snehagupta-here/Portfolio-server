@@ -24,6 +24,10 @@ export interface UserSkill {
   scale: number;
 }
 
+export interface UserEnv {
+  githubToken?: string;
+}
+
 export interface UserUpdate {
   name?: string;
   title?: string;
@@ -31,6 +35,7 @@ export interface UserUpdate {
   bio?: string;
   email?: string;
   avatar?: UserFileAsset;
+  aboutImage?: UserFileAsset;
   aboutHeading?: string;
   aboutBio?: string;
   totalYearsExperience?: string;
@@ -41,4 +46,5 @@ export interface UserUpdate {
   socialLinks?: SocialLink[];
   skills?: UserSkill[];
   resume?: UserFileAsset;
+  env?: UserEnv;
 }

@@ -111,6 +111,12 @@ export class SearchUserQueryDto {
   skill_id?: string;
 }
 
+export class EnvDto {
+  @IsOptional()
+  @IsString()
+  githubToken?: string;
+}
+
 export class UpdateUserDto {
   @IsOptional()
   @IsString()
@@ -136,6 +142,11 @@ export class UpdateUserDto {
   @ValidateNested()
   @Type(() => UserFileAssetDto)
   avatar?: UserFileAssetDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UserFileAssetDto)
+  aboutImage?: UserFileAssetDto;
 
   @IsOptional()
   @IsString()
@@ -184,4 +195,9 @@ export class UpdateUserDto {
   @ValidateNested()
   @Type(() => UserFileAssetDto)
   resume?: UserFileAssetDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => EnvDto)
+  env?: EnvDto;
 }

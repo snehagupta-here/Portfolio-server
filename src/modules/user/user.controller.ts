@@ -41,12 +41,12 @@ export class UserController {
     return res.send(resume.buffer);
   }
 
-  @Get('contributions')
-  getContributions(@Query('year') year?: string) {
+  @Get(':id/contributions')
+  getContributions(@Param('id') id: string, @Query('year') year?: string) {
     console.log("Received year query parameter:", year);
     const selectedYear = year ? Number(year) : new Date().getFullYear();
 
-    return this.userService.getContributions(selectedYear);
+    return this.userService.getContributions(id,selectedYear);
   }
 
   @Get(':id')
@@ -63,6 +63,4 @@ export class UserController {
   async remove(@Param('id') id: string) {
     return await this.userService.deleteUser(id);
   }
-
-  
 }

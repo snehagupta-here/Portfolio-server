@@ -24,6 +24,10 @@ export const envSchema = z.object({
     .int()
     .positive()
     .default(configDefaults.mongo.connectTimeoutSeconds),
+  ENCRYPTION_KEY: z
+    .string()
+    .trim()
+    .length(64, 'ENCRYPTION_KEY must be exactly 32 bytes (64 hex characters)'),
   MONGO_MAX_RETRIES: z.coerce
     .number()
     .int()
