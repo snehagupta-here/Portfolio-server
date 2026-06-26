@@ -386,10 +386,10 @@ console.log('Fetched user:', user); // Log the fetched user for debugging
     if (!user?.env?.githubToken) {
       throw new BadGatewayException('GitHub token not found for user');
     }
-
+console.log("user",user.env.githubToken)
     const token = this.decrypt(user.env.githubToken);
     const yearCache = cache?.data?.[year];
-
+console.log("token",token)
     if (yearCache && new Date(yearCache.expiresAt) > new Date()) {
       console.log(`Returning GitHub contributions for ${year} from cache`);
       return yearCache.result;

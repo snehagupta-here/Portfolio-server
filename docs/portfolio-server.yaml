@@ -2408,7 +2408,7 @@ paths:
                 value:
                   name: Priya Mehta
                   email: priya@example.com
-                  organization: Startup Labs
+                  subject: Project collaboration
                   message: Hi, I would love to discuss a potential collaboration on a new product.
       responses:
         '201':
@@ -4328,6 +4328,7 @@ components:
       required:
         - name
         - email
+        - subject
         - message
       properties:
         name:
@@ -4335,7 +4336,7 @@ components:
         email:
           type: string
           format: email
-        organization:
+        subject:
           type: string
         message:
           type: string

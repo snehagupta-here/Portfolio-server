@@ -1,16 +1,19 @@
-import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class ContactUsBody {
   @IsString()
+  @IsNotEmpty()
   name!: string;
 
   @IsEmail()
+  @IsNotEmpty()
   email!: string;
 
-  @IsOptional()
   @IsString()
-  organization?: string;
+  @IsNotEmpty()
+  subject!: string;
 
   @IsString()
+  @IsNotEmpty()
   message!: string;
 }
