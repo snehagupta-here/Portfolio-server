@@ -254,6 +254,106 @@ paths:
         '404':
           $ref: '#/components/responses/UserNotFoundError'
 
+
+  /user/{id}/download-resume:
+    get:
+      tags:
+        - Users
+      summary: Download a user resume
+      description: |
+        Streams the user's resume file as a binary attachment.
+        This endpoint bypasses the JSON success envelope and returns the raw file bytes.
+      parameters:
+        - $ref: '#/components/parameters/MongoIdPathParam'
+      responses:
+        '200':
+          description: Resume file downloaded successfully
+          headers:
+            Content-Disposition:
+              description: Attachment filename for the resume
+              schema:
+                type: string
+                example: attachment; filename="Ashu-Goyal-Resume.pdf"
+            Content-Length:
+              schema:
+                type: integer
+                example: 240512
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+              examples:
+                default:
+                  summary: PDF resume binary
+                  value: <binary PDF bytes>
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/InvalidUserIdError'
+        '404':
+          $ref: '#/components/responses/UserResumeNotFoundError'
+        '502':
+          $ref: '#/components/responses/UserResumeDownloadFailedError'
+
+  /user/{id}/contributions:
+    get:
+      tags:
+        - Users
+      summary: Get GitHub contribution stats for a user
+      description: |
+        Returns contribution calendar stats for the requested year.
+        Uses a cached GitHub GraphQL response when available (about 6 hours).
+      parameters:
+        - $ref: '#/components/parameters/MongoIdPathParam'
+        - name: year
+          in: query
+          required: false
+          description: Contribution year. Defaults to the current calendar year.
+          schema:
+            type: integer
+            example: 2026
+      responses:
+        '200':
+          description: Contributions fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserContributionsResponse'
+              examples:
+                default:
+                  value:
+                    success: true
+                    statusCode: 200
+                    message: Request successful
+                    data:
+                      year: 2026
+                      username: ashugoyal
+                      totalContributions: 842
+                      pullRequestContributions: 64
+                      restrictedContributions: 0
+                      activeDays: 198
+                      longestStreak: 21
+                      currentStreak: 4
+                      weeks:
+                        - contributionDays:
+                            - date: '2026-01-01'
+                              contributionCount: 2
+                              color: '#9be9a8'
+                              weekday: 4
+                            - date: '2026-01-02'
+                              contributionCount: 0
+                              color: '#ebedf0'
+                              weekday: 5
+                    timeStamp: '2026-04-08T06:10:10.000Z'
+                    path: /api/v1/user/660f0c1f4d8c8b3c2adfd001/contributions?year=2026
+        '400':
+          $ref: '#/components/responses/InvalidUserIdError'
+        '502':
+          $ref: '#/components/responses/UserGithubTokenMissingError'
+
   /user/search:
     get:
       tags:
@@ -519,6 +619,77 @@ paths:
           $ref: '#/components/responses/InvalidSkillIdError'
         '404':
           $ref: '#/components/responses/SkillNotFoundError'
+    patch:
+      tags:
+        - Skills
+      summary: Update a skill
+      parameters:
+        - $ref: '#/components/parameters/MongoIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkillUpdateRequest'
+            examples:
+              default:
+                value:
+                  name: NestJS Framework
+                  category: backend
+      responses:
+        '200':
+          description: Skill updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillMutationResponse'
+              examples:
+                default:
+                  value:
+                    success: true
+                    statusCode: 200
+                    message: Skill updated successfully.
+                    data:
+                      _id: 660f0c1f4d8c8b3c2adfd111
+                      name: NestJS Framework
+                      category: backend
+                      icon:
+                        publicId: portfolio/skills/nestjs
+                        secureUrl: https://res.cloudinary.com/demo/image/upload/v1/nestjs.png
+                      createdAt: '2026-04-08T06:11:00.000Z'
+                      updatedAt: '2026-04-08T06:11:05.000Z'
+                    timeStamp: '2026-04-08T06:11:05.000Z'
+                    path: /api/v1/skills/660f0c1f4d8c8b3c2adfd111
+        '400':
+          $ref: '#/components/responses/InvalidSkillIdError'
+        '404':
+          $ref: '#/components/responses/SkillNotFoundError'
+
+    delete:
+      tags:
+        - Skills
+      summary: Delete a skill
+      parameters:
+        - $ref: '#/components/parameters/MongoIdPathParam'
+      responses:
+        '200':
+          description: Skill deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteResponse'
+              examples:
+                default:
+                  value:
+                    success: true
+                    statusCode: 200
+                    message: Skill deleted successfully.
+                    timeStamp: '2026-04-08T06:11:03.000Z'
+                    path: /api/v1/skills/660f0c1f4d8c8b3c2adfd111
+        '400':
+          $ref: '#/components/responses/InvalidSkillIdError'
+        '404':
+          $ref: '#/components/responses/SkillNotFoundError'
 
   /skills/search:
     get:
@@ -591,78 +762,6 @@ paths:
                     path: /api/v1/skills/search?category=backend
         '400':
           $ref: '#/components/responses/SkillSearchQueryRequiredError'
-
-    patch:
-      tags:
-        - Skills
-      summary: Update a skill
-      parameters:
-        - $ref: '#/components/parameters/MongoIdPathParam'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SkillUpdateRequest'
-            examples:
-              default:
-                value:
-                  name: NestJS Framework
-                  category: backend
-      responses:
-        '200':
-          description: Skill updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SkillMutationResponse'
-              examples:
-                default:
-                  value:
-                    success: true
-                    statusCode: 200
-                    message: Skill updated successfully.
-                    data:
-                      _id: 660f0c1f4d8c8b3c2adfd111
-                      name: NestJS Framework
-                      category: backend
-                      icon:
-                        publicId: portfolio/skills/nestjs
-                        secureUrl: https://res.cloudinary.com/demo/image/upload/v1/nestjs.png
-                      createdAt: '2026-04-08T06:11:00.000Z'
-                      updatedAt: '2026-04-08T06:11:05.000Z'
-                    timeStamp: '2026-04-08T06:11:05.000Z'
-                    path: /api/v1/skills/660f0c1f4d8c8b3c2adfd111
-        '400':
-          $ref: '#/components/responses/InvalidSkillIdError'
-        '404':
-          $ref: '#/components/responses/SkillNotFoundError'
-
-    delete:
-      tags:
-        - Skills
-      summary: Delete a skill
-      parameters:
-        - $ref: '#/components/parameters/MongoIdPathParam'
-      responses:
-        '200':
-          description: Skill deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeleteResponse'
-              examples:
-                default:
-                  value:
-                    success: true
-                    statusCode: 200
-                    message: Skill deleted successfully.
-                    timeStamp: '2026-04-08T06:11:03.000Z'
-                    path: /api/v1/skills/660f0c1f4d8c8b3c2adfd111
-        '400':
-          $ref: '#/components/responses/InvalidSkillIdError'
-        '404':
-          $ref: '#/components/responses/SkillNotFoundError'
 
   /achievement:
     post:
@@ -1047,6 +1146,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TestimonialMutationResponse'
+              examples:
+                default:
+                  value:
+                    success: true
+                    statusCode: 201
+                    message: Testimonial created successfully.
+                    data:
+                      _id: 660f0c1f4d8c8b3c2adfd401
+                      user_id: 660f0c1f4d8c8b3c2adfd001
+                      name: Riya Sharma
+                      description: Delivered clean backend APIs and communicated clearly throughout the project.
+                      designation: Product Manager
+                      rating: 5
+                      testimonial_date: '2026-04-10T00:00:00.000Z'
+                      createdAt: '2026-04-10T09:30:00.000Z'
+                      updatedAt: '2026-04-10T09:30:00.000Z'
+                    timeStamp: '2026-04-10T09:30:00.000Z'
+                    path: /api/v1/testimonial/660f0c1f4d8c8b3c2adfd001
         '400':
           $ref: '#/components/responses/ValidationError'
 
@@ -1510,6 +1627,21 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ExperienceUpdateRequest'
+            examples:
+              default:
+                value:
+                  designation: Senior Backend Engineer
+                  end_date: '2025-03-31'
+                  location: Bengaluru, India
+                  description: Led NestJS microservice design and AWS deployments.
+                  responsibilities:
+                    - Mentored engineers on API design
+                    - Improved deployment reliability on AWS ECS
+                  tech_stack:
+                    - NestJS
+                    - MongoDB
+                    - AWS
+                    - TypeScript
       responses:
         '200':
           description: Experience updated successfully
@@ -1806,6 +1938,23 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/BlogUpdateRequest'
+            examples:
+              default:
+                value:
+                  title: Building a REST API with NestJS — Updated
+                  description: Updated guide covering validation, error handling, and deployment.
+                  isActive: true
+                  metadata:
+                    featured: true
+                    readTime: 8
+                    lastModified: '2026-04-08T06:19:00.000Z'
+                  seo:
+                    metaTitle: Building a REST API with NestJS — Updated
+                    metaDescription: An updated NestJS REST API guide with production patterns.
+                    keywords:
+                      - nestjs
+                      - rest api
+                      - validation
       responses:
         '200':
           description: Blog updated successfully
@@ -2238,6 +2387,23 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ProjectUpdateRequest'
+            examples:
+              default:
+                value:
+                  title: Portfolio Server v2
+                  tagline: A production-ready NestJS backend for portfolio management.
+                  shortDescription: Updated NestJS API with richer OpenAPI coverage and analytics.
+                  liveUrl: https://api.portfolio.example.com
+                  isActive: true
+                  meta:
+                    status: completed
+                    tags:
+                      - nestjs
+                      - mongodb
+                      - openapi
+                  metadata:
+                    featured: true
+                    lastModified: '2026-04-08T06:22:00.000Z'
       responses:
         '200':
           description: Project updated successfully
@@ -2748,6 +2914,62 @@ components:
                 error: Not Found
                 timeStamp: '2026-04-08T06:12:02.000Z'
                 path: /api/v1/user/660f0c1f4d8c8b3c2adfd099
+
+    UserResumeNotFoundError:
+      description: User resume not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            default:
+              value:
+                success: false
+                statusCode: 404
+                message: User resume not found
+                error: Not Found
+                timeStamp: '2026-04-08T06:12:04.000Z'
+                path: /api/v1/user/660f0c1f4d8c8b3c2adfd001/download-resume
+
+    UserResumeDownloadFailedError:
+      description: Failed to download user resume from storage
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            default:
+              value:
+                success: false
+                statusCode: 502
+                message: Failed to download user resume
+                error: Bad Gateway
+                timeStamp: '2026-04-08T06:12:04.500Z'
+                path: /api/v1/user/660f0c1f4d8c8b3c2adfd001/download-resume
+
+    UserGithubTokenMissingError:
+      description: GitHub token missing or GitHub API request failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missingToken:
+              value:
+                success: false
+                statusCode: 502
+                message: GitHub token not found for user
+                error: Bad Gateway
+                timeStamp: '2026-04-08T06:12:05.000Z'
+                path: /api/v1/user/660f0c1f4d8c8b3c2adfd001/contributions
+            githubApiFailed:
+              value:
+                success: false
+                statusCode: 502
+                message: Failed to fetch GitHub contributions
+                error: Bad Gateway
+                timeStamp: '2026-04-08T06:12:05.500Z'
+                path: /api/v1/user/660f0c1f4d8c8b3c2adfd001/contributions
 
     UserSearchBadRequestError:
       description: User search request is invalid
@@ -4714,6 +4936,73 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/UserDocument'
+
+    GithubContributionDay:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: '2026-01-01'
+        contributionCount:
+          type: integer
+          example: 2
+        color:
+          type: string
+          example: '#9be9a8'
+        weekday:
+          type: integer
+          minimum: 0
+          maximum: 6
+          example: 4
+
+    GithubContributionWeek:
+      type: object
+      properties:
+        contributionDays:
+          type: array
+          items:
+            $ref: '#/components/schemas/GithubContributionDay'
+
+    UserContributionsData:
+      type: object
+      properties:
+        year:
+          type: integer
+          example: 2026
+        username:
+          type: string
+          example: ashugoyal
+        totalContributions:
+          type: integer
+          example: 842
+        pullRequestContributions:
+          type: integer
+          example: 64
+        restrictedContributions:
+          type: integer
+          example: 0
+        activeDays:
+          type: integer
+          example: 198
+        longestStreak:
+          type: integer
+          example: 21
+        currentStreak:
+          type: integer
+          example: 4
+        weeks:
+          type: array
+          items:
+            $ref: '#/components/schemas/GithubContributionWeek'
+
+    UserContributionsResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/UserContributionsData'
 
     AuthResponse:
       allOf:
